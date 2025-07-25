@@ -172,7 +172,7 @@ MedicalAPPGet/
 - **Semantic Colors**: Success, warning, and error states
 - **Neutral Grays**: For backgrounds and text
 
-## To-Do
+## 📝 To-Do
 
 - **Email**: Password set-up by employee through a temporary link. Same for reset.
 - **Interactive Report**: Upgrade the UX to allow better interactivity with the report, the image etc...
