@@ -171,3 +171,9 @@ MedicalAPPGet/
 - **Secondary Color**: #fbba21 (Accent gold)
 - **Semantic Colors**: Success, warning, and error states
 - **Neutral Grays**: For backgrounds and text
+
+## To-Do
+
+- **Email**: Password set-up by employee through a temporary link. Same for reset.
+- **Interactive Report**: Upgrade the UX to allow better interactivity with the report, the image etc...
+- **Celery and AI**: Reports automatically generated with AI.
