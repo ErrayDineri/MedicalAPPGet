@@ -28,7 +28,7 @@ A comprehensive Django-based web application for managing medical radiology work
 
 1. **Clone the repository**
    ```bash
-   git clone <repository-url>
+   git clone https://github.com/ErrayDineri/MedicalAPPGet
    cd MedicalAPPGet
    ```
 
