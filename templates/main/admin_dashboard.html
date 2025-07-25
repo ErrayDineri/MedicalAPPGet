@@ -1,0 +1,220 @@
+{% extends 'main/base.html' %}
+
+{% block title %}Dashboard Admin - Medical App{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1><i class="fas fa-users-cog me-2"></i>Dashboard Administrateur</h1>
+            <div>
+                <div class="btn-group me-3" role="group">
+                    <a href="?show_archived=false" class="btn {% if not show_archived %}btn-primary{% else %}btn-outline-primary{% endif %}">
+                        <i class="fas fa-users me-1"></i>Employés Actifs
+                    </a>
+                    <a href="?show_archived=true" class="btn {% if show_archived %}btn-primary{% else %}btn-outline-primary{% endif %}">
+                        <i class="fas fa-archive me-1"></i>Employés Archivés
+                        {% if archived_users > 0 %}
+                            <span class="badge bg-light text-dark ms-1">{{ archived_users }}</span>
+                        {% endif %}
+                    </a>
+                </div>
+                <a href="{% url 'add_employee' %}" class="btn btn-success">
+                    <i class="fas fa-user-plus me-2"></i>Ajouter Nouvel Employé
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    {% if show_archived %}
+                        <i class="fas fa-archive me-2"></i>Personnel Active
+                    {% else %}
+                        <i class="fas fa-users me-2"></i>Personnel Archivé
+                    {% endif %}
+                    <span class="badge bg-secondary ms-2">{{ users.count }}</span>
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if users %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Nom</th>
+                                    <th>Identifiant</th>
+                                    <th>CIN</th>
+                                    <th>Email</th>
+                                    <th>Rôle</th>
+                                    <th>Date d'Ajout</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for user in users %}
+                                    <tr>
+                                        <td>
+                                            <strong>{{ user.first_name }} {{ user.last_name }}</strong>
+                                        </td>
+                                        <td>{{ user.username }}</td>
+                                        <td>{{ user.cin }}</td>
+                                        <td>{{ user.email }}</td>
+                                        <td>
+                                            <span class="badge {% if user.role == 'medecin' %}bg-primary{% else %}bg-info{% endif %}">
+                                                {% if user.role == 'medecin' %}
+                                                    <i class="fas fa-user-md me-1"></i>
+                                                {% else %}
+                                                    <i class="fas fa-user-nurse me-1"></i>
+                                                {% endif %}
+                                                {{ user.get_role_display }}
+                                            </span>
+                                        </td>
+                                        <td>{{ user.date_joined|date:"d/m/Y" }}</td>
+                                        <td>
+                                            <div class="btn-group btn-group-sm">
+                                                {% if show_archived %}
+                                                    <!-- Actions for archived users -->
+                                                    <form method="post" action="{% url 'reactivate_user' user.id %}" style="display: inline;">
+                                                        {% csrf_token %}
+                                                        <button type="submit" class="btn btn-success" 
+                                                                onclick="return confirm('Are you sure you want to reactivate {{ user.get_full_name }}?')">
+                                                            <i class="fas fa-undo"></i> Réactiver
+                                                        </button>
+                                                    </form>
+                                                {% else %}
+                                                    <!-- Actions for active users -->
+                                                    <form method="post" action="{% url 'reset_password' user.id %}" style="display: inline;">
+                                                        {% csrf_token %}
+                                                        <button type="submit" class="btn btn-warning" 
+                                                                onclick="return confirm('Are you sure you want to reset password for {{ user.get_full_name }}?')">
+                                                            <i class="fas fa-key"></i>
+                                                        </button>
+                                                    </form>
+                                                    <form method="post" action="{% url 'archive_user' user.id %}" style="display: inline;">
+                                                        {% csrf_token %}
+                                                        <button type="submit" class="btn btn-danger" 
+                                                                onclick="return confirm('Are you sure you want to archive {{ user.get_full_name }}?')">
+                                                            <i class="fas fa-archive"></i>
+                                                        </button>
+                                                    </form>
+                                                {% endif %}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="text-center py-5">
+                        {% if show_archived %}
+                            <i class="fas fa-archive fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">Aucun Personnel Archivé</h5>
+                            <a href="?show_archived=false" class="btn btn-primary">
+                                <i class="fas fa-users me-2"></i>Consulter Personnel Actif
+                            </a>
+                        {% else %}
+                            <i class="fas fa-users fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">Aucun Personnel Actif</h5>
+                            <a href="{% url 'add_employee' %}" class="btn btn-success">
+                                <i class="fas fa-user-plus me-2"></i>Ajouter un Premier Employé
+                            </a>
+                        {% endif %}
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Statistics Cards -->
+<div class="row mt-4">
+    <div class="col-md-3">
+        <div class="card bg-primary text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6>Total Médecins</h6>
+                        <h3>{{ total_doctors }}</h3>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-user-md fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-info text-dark">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6>Total Techniciens</h6>
+                        <h3>{{ total_technicians }}</h3>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-user-nurse fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-success text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6>Personnel Actif</h6>
+                        <h3>{{ active_users }}</h3>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-users fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-secondary text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6>Personnel Archivé</h6>
+                        <h3>{{ archived_users }}</h3>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-archive fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body text-center">
+                <h5>Actions Rapide</h5>
+                <a href="{% url 'add_employee' %}" class="btn btn-success me-2">
+                    <i class="fas fa-user-plus me-1"></i>Ajouter Employé
+                </a>
+                <a href="{% url 'dashboard' %}" class="btn btn-outline-primary me-2">
+                    <i class="fas fa-home me-1"></i>Dashboard
+                </a>
+                <form method="post" action="{% url 'logout' %}" style="display: inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-outline-secondary">
+                        <i class="fas fa-sign-out-alt me-1"></i>Déconnexion
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

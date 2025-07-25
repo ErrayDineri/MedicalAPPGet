@@ -1,0 +1,116 @@
+{% extends 'main/base.html' %}
+
+{% block title %}Dashboard Médecin - Medical App{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1><i class="fas fa-user-md me-2"></i>Dashboard Médecin</h1>
+            <div class="btn-group" role="group">
+                <a href="?show_validated=false" class="btn {% if not show_validated %}btn-primary{% else %}btn-outline-primary{% endif %}">
+                    <i class="fas fa-clock me-1"></i>Non-Validés
+                </a>
+                <a href="?show_validated=true" class="btn {% if show_validated %}btn-success{% else %}btn-outline-success{% endif %}">
+                    <i class="fas fa-check-circle me-1"></i>Validés
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-list me-2"></i>
+                    {% if show_validated %}Rapports Validés{% else %}Rapports en Attente{% endif %}
+                    <span class="badge bg-secondary ms-2">{{ reports.count }}</span>
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if reports %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Patient</th>
+                                    <th>CIN</th>
+                                    <th>Type d'Imagerie</th>
+                                    <th>Date Crée</th>
+                                    <th>Technicien</th>
+                                    <th>Statut</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for report in reports %}
+                                    <tr>
+                                        <td>
+                                            <strong>{{ report.patient.prenom }} {{ report.patient.nom }}</strong>
+                                            <br>
+                                            <small class="text-muted">{{ report.patient.mail }}</small>
+                                        </td>
+                                        <td>{{ report.patient.cin }}</td>
+                                        <td>
+                                            <span class="badge bg-secondary">
+                                                <i class="fas fa-x-ray me-1"></i>{{ report.get_scan_type }}
+                                            </span>
+                                        </td>
+                                        <td>{{ report.date_created|date:"d/m/Y H:i" }}</td>
+                                        <td>{{ report.created_by.get_full_name }}</td>
+                                        <td>
+                                            <span class="status-badge {% if report.status == 'valide' %}status-valide{% else %}status-non-valide{% endif %}">
+                                                {% if report.status == 'valide' %}
+                                                    <i class="fas fa-check-circle me-1"></i>Validé
+                                                {% else %}
+                                                    <i class="fas fa-clock me-1"></i>Non-Validé
+                                                {% endif %}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <div class="btn-group btn-group-sm">
+                                                <a href="{% url 'report_detail' report.id %}" class="btn btn-primary">
+                                                    <i class="fas fa-eye me-1"></i>Consulter
+                                                </a>
+                                                <a href="{% url 'report_history' report.patient.id %}" class="btn btn-info">
+                                                    <i class="fas fa-history me-1"></i>Historique du Patient
+                                                </a>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">Aucun rapport trouvé</h5>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body text-center">
+                <h5>Actions Rapides</h5>
+                <a href="{% url 'dashboard' %}" class="btn btn-outline-primary me-2">
+                    <i class="fas fa-home me-1"></i>Dashboard
+                </a>
+                <form method="post" action="{% url 'logout' %}" style="display: inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-outline-secondary">
+                        <i class="fas fa-sign-out-alt me-1"></i>Déconnexion
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

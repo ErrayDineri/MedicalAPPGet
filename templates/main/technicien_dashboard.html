@@ -1,0 +1,215 @@
+{% extends 'main/base.html' %}
+
+{% block title %}Dashboard - Technicien Radiologue{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1>Dashboard - Technicien Radiologue</h1>
+                <div>
+                    <span class="text-muted">Bienvenue, {{ user.first_name }} {{ user.last_name }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Search Patient Section -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Rechercher Patient</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="search">
+                        <div class="mb-3">
+                            <label for="reference_dossier" class="form-label">Référence Dossier Médical</label>
+                            <input type="text" class="form-control" id="reference_dossier" name="reference_dossier" 
+                                   value="{{ reference_dossier|default:'' }}" placeholder="Entrer la référence du dossier" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-search"></i> Rechercher
+                        </button>
+                    </form>
+
+                    {% if search_performed %}
+                        {% if found_patient %}
+                            <div class="alert alert-success mt-3">
+                                <h6><i class="fas fa-user-check"></i> Patient trouvé</h6>
+                                <p class="mb-1"><strong>{{ found_patient.prenom }} {{ found_patient.nom }}</strong></p>
+                                <p class="mb-1">CIN: {{ found_patient.cin }}</p>
+                                <p class="mb-1">Email: {{ found_patient.mail }}</p>
+                                <p class="mb-0">Nombre de scans: {{ found_patient.reports.count }}</p>
+                            </div>
+
+                            <!-- Add Scan Form -->
+                            <div class="card mt-3">
+                                <div class="card-header">
+                                    <h6 class="mb-0">Ajouter un nouveau scan</h6>
+                                </div>
+                                <div class="card-body">
+                                    <form method="post" enctype="multipart/form-data">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="action" value="add_scan">
+                                        <input type="hidden" name="patient_id" value="{{ found_patient.id }}">
+                                        <div class="mb-3">
+                                            <label for="imagerie" class="form-label">Scan Médical</label>
+                                            <input type="file" class="form-control" id="imagerie" name="imagerie" 
+                                                   accept="image/*" required>
+                                            <div class="form-text">Formats acceptés: JPG, PNG, DICOM</div>
+                                        </div>
+                                        <button type="submit" class="btn btn-success">
+                                            <i class="fas fa-plus"></i> Ajouter Scan
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        {% else %}
+                            <div class="alert alert-warning mt-3">
+                                <h6><i class="fas fa-exclamation-triangle"></i> Patient introuvable</h6>
+                                <p class="mb-0">Aucun patient trouvé avec la référence dossier: <strong>{{ reference_dossier }}</strong></p>
+                            </div>
+                        {% endif %}
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Create New Patient Section -->
+        <div class="col-md-6">
+            {% if search_performed and not found_patient %}
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Créer Nouveau Patient</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="create_patient">
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                {{ form.nom.label_tag }}
+                                {{ form.nom }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                {{ form.prenom.label_tag }}
+                                {{ form.prenom }}
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            {{ form.cin.label_tag }}
+                            {{ form.cin }}
+                        </div>
+                        
+                        <div class="mb-3">
+                            {{ form.mail.label_tag }}
+                            {{ form.mail }}
+                        </div>
+                        
+                        <div class="mb-3">
+                            {{ form.reference_dossier.label_tag }}
+                            {{ form.reference_dossier }}
+                            <div class="form-text">Utiliser: {{ reference_dossier }}</div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            {{ form.imagerie.label_tag }}
+                            {{ form.imagerie }}
+                            <div class="form-text">{{ form.imagerie.help_text }}</div>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-user-plus"></i> Créer Patient avec Premier Scan
+                        </button>
+                    </form>
+                </div>
+            </div>
+            {% else %}
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Instructions</h5>
+                </div>
+                <div class="card-body">
+                    <div class="text-center text-muted">
+                        <i class="fas fa-info-circle fa-3x mb-3"></i>
+                        <h6>Processus de Travail</h6>
+                        <p class="mb-1">1. Rechercher un patient par référence dossier</p>
+                        <p class="mb-1">2. Si trouvé → Ajouter un nouveau scan</p>
+                        <p class="mb-0">3. Si non trouvé → Créer nouveau patient</p>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Recent Scans -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Mes Scans Récents</h5>
+                </div>
+                <div class="card-body">
+                    {% if recent_reports %}
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Patient</th>
+                                        <th>Référence Dossier</th>
+                                        <th>Statut</th>
+                                        <th>Scan</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for report in recent_reports %}
+                                    <tr>
+                                        <td>{{ report.date_created|date:"d/m/Y H:i" }}</td>
+                                        <td>{{ report.patient.prenom }} {{ report.patient.nom }}</td>
+                                        <td>{{ report.patient.reference_dossier }}</td>
+                                        <td>
+                                            {% if report.status == 'valide' %}
+                                                <span class="badge bg-success">Validé</span>
+                                            {% else %}
+                                                <span class="badge bg-warning">En attente</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if report.imagerie %}
+                                                <i class="fas fa-image text-success"></i> {{ report.get_scan_type }}
+                                            {% else %}
+                                                <i class="fas fa-minus text-muted"></i> Aucun
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center text-muted py-4">
+                            <i class="fas fa-inbox fa-3x mb-3"></i>
+                            <p>Aucun scan enregistré pour le moment</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Auto-fill reference_dossier when creating new patient
+{% if search_performed and not found_patient and reference_dossier %}
+document.getElementById('id_reference_dossier').value = '{{ reference_dossier }}';
+{% endif %}
+</script>
+{% endblock %}
