@@ -4,9 +4,17 @@ from . import views
 
 urlpatterns = [
     # Authentication
-    path('', views.login_view, name='login'),
+    path('', views.dashboard, name='home'),  # Root URL redirects to appropriate dashboard
     path('login/', views.login_view, name='login'),
     path('logout/', auth_views.LogoutView.as_view(), name='logout'),
+    
+    # Password Reset URLs for new employees
+    path('password-reset-confirm/<uidb64>/<token>/',
+         auth_views.PasswordResetConfirmView.as_view(
+             template_name='main/password_reset_confirm.html',
+             success_url='/login/?password_set=true'
+         ),
+         name='password_reset_confirm'),
     
     # Dashboard routing
     path('dashboard/', views.dashboard, name='dashboard'),

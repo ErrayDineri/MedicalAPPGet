@@ -6,6 +6,12 @@ from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 from django.utils import timezone
 from django.db.models import Q
+from django.core.mail import send_mail
+from django.contrib.auth.tokens import default_token_generator
+from django.utils.http import urlsafe_base64_encode
+from django.utils.encoding import force_bytes
+from django.template.loader import render_to_string
+from django.conf import settings
 from .models import User, Patient, Report, ReportSection
 from .forms import PatientForm, UserForm, ReportForm
 import json
@@ -13,6 +19,10 @@ import secrets
 import string
 
 def login_view(request):
+    # Check if user just set their password
+    if request.GET.get('password_set') == 'true':
+        messages.success(request, 'Votre mot de passe a été créé avec succès! Vous pouvez maintenant vous connecter.')
+    
     if request.method == 'POST':
         username = request.POST.get('username')
         password = request.POST.get('password')
@@ -247,9 +257,40 @@ def add_employee(request):
         form = UserForm(request.POST)
         if form.is_valid():
             user = form.save(commit=False)
-            user.set_password(form.cleaned_data['password'])
+            # Set unusable password - user will set it via email link
+            user.set_unusable_password()
             user.save()
-            messages.success(request, f'Employee {user.get_full_name()} added successfully!')
+            
+            # Generate password reset token
+            token = default_token_generator.make_token(user)
+            uid = urlsafe_base64_encode(force_bytes(user.pk))
+            
+            # Create password reset link
+            reset_link = request.build_absolute_uri(f'/password-reset-confirm/{uid}/{token}/')
+            
+            # Send email
+            subject = 'Bienvenue - Créez votre mot de passe'
+            context = {
+                'user': user,
+                'reset_link': reset_link,
+                'timeout_seconds': settings.PASSWORD_RESET_TIMEOUT,
+            }
+            message = render_to_string('emails/welcome_email.txt', context)
+            
+            try:
+                send_mail(
+                    subject,
+                    message,
+                    settings.DEFAULT_FROM_EMAIL,
+                    [user.email],
+                    fail_silently=False,
+                )
+                messages.success(request, f'Employee {user.get_full_name()} added successfully! A password setup email has been sent to {user.email}.')
+            except Exception as e:
+                # If email fails, delete the user and show error
+                user.delete()
+                messages.error(request, f'Failed to send email to {form.cleaned_data["email"]}. Employee not created. Please check the email address and try again.')
+                
             return redirect('admin_dashboard')
     else:
         form = UserForm()
@@ -297,12 +338,37 @@ def reset_password(request, user_id):
     
     user = get_object_or_404(User, id=user_id)
     
-    # Generate a secure random password
-    alphabet = string.ascii_letters + string.digits
-    new_password = ''.join(secrets.choice(alphabet) for i in range(12))
-    
-    user.set_password(new_password)
+    # Set unusable password - user will set it via email link
+    user.set_unusable_password()
     user.save()
     
-    messages.success(request, f'Password reset for {user.get_full_name()}. New password: {new_password}')
+    # Generate password reset token
+    token = default_token_generator.make_token(user)
+    uid = urlsafe_base64_encode(force_bytes(user.pk))
+    
+    # Create password reset link
+    reset_link = request.build_absolute_uri(f'/password-reset-confirm/{uid}/{token}/')
+    
+    # Send email
+    subject = 'Réinitialisation de mot de passe - Medical App'
+    context = {
+        'user': user,
+        'reset_link': reset_link,
+        'is_reset': True,  # Flag to indicate this is a password reset
+        'timeout_seconds': settings.PASSWORD_RESET_TIMEOUT,
+    }
+    message = render_to_string('emails/password_reset_email.txt', context)
+    
+    try:
+        send_mail(
+            subject,
+            message,
+            settings.DEFAULT_FROM_EMAIL,
+            [user.email],
+            fail_silently=False,
+        )
+        messages.success(request, f'Password reset email sent to {user.get_full_name()} ({user.email}). They will receive instructions to create a new password.')
+    except Exception as e:
+        messages.error(request, f'Failed to send password reset email to {user.email}. Please check the email address and try again.')
+    
     return redirect('admin_dashboard')

@@ -1,0 +1,18 @@
+{% load time_filters %}Bonjour {{ user.first_name }} {{ user.last_name }},
+
+Votre compte a été créé avec succès dans le système Medical App.
+
+Détails du compte:
+• Nom d'utilisateur: {{ user.username }}
+• Email: {{ user.email }}
+• Rôle: {{ user.get_role_display }}
+
+Pour activer votre compte et créer votre mot de passe, veuillez cliquer sur le lien suivant:
+{{ reset_link }}
+
+Ce lien est valide pendant {{ timeout_seconds|format_duration }}.
+
+Si vous n'arrivez pas à cliquer sur le lien, copiez-le et collez-le dans votre navigateur.
+
+Cordialement,
+L'équipe Medical App

@@ -48,24 +48,54 @@ A comprehensive Django-based web application for managing medical radiology work
    pip install -r requirements.txt
    ```
 
-4. **Setup database**
+4. **Configure environment variables**
+   
+   Create a `.env` file in the project root directory using `.env.example` as a reference:
+   
+   ```bash
+   # Copy the example file
+   cp .env.example .env
+   ```
+   
+   Then edit the `.env` file with your specific configuration:
+   
+   ```bash
+   SECRET_KEY=your-actual-django-secret-key-here
+   EMAIL_HOST=smtp.gmail.com
+   EMAIL_PORT=587
+   EMAIL_HOST_USER=your-email@gmail.com
+   EMAIL_HOST_PASSWORD=your-app-password-here
+   DEFAULT_FROM_EMAIL=noreply@yourcompany.com
+   PASSWORD_RESET_TIMEOUT=3600
+   ```
+   
+   **Configuration Details:**
+   - `SECRET_KEY`: Generate a new Django secret key for production
+   - `EMAIL_HOST_USER`: Your Gmail account for sending emails
+   - `EMAIL_HOST_PASSWORD`: Gmail app password (not your regular password)
+   - `DEFAULT_FROM_EMAIL`: The "from" address that appears in emails
+   - `PASSWORD_RESET_TIMEOUT`: Time in seconds for password reset links to expire (3600 = 1 hour)
+   
+   **Important:** Never commit your actual `.env` file to version control. The `.env.example` file serves as a template with placeholder values.
+
+5. **Setup database**
    ```bash
    python manage.py makemigrations
    python manage.py migrate
    ```
 
-5. **Create superuser (Administrator)**
+6. **Create superuser (Administrator)**
    ```bash
    python manage.py createsuperuser
    ```
    Follow the prompts to create your admin account.
 
-6. **Run the development server**
+7. **Run the development server**
    ```bash
    python manage.py runserver
    ```
 
-7. **Access the application**
+8. **Access the application**
    Open your browser and navigate to: `http://127.0.0.1:8000`
 
 ## 📦 Dependencies
@@ -173,7 +203,6 @@ MedicalAPPGet/
 - **Neutral Grays**: For backgrounds and text
 
 ## 📝 To-Do
-
-- **Email**: Password set-up by employee through a temporary link. Same for reset.
+- ~~**Email**: Password set-up by employee through a temporary link. Same for reset.~~
 - **Interactive Report**: Upgrade the UX to allow better interactivity with the report, the image etc...
 - **Celery and AI**: Reports automatically generated with AI.
