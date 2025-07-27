@@ -32,7 +32,7 @@ def login_view(request):
             login(request, user)
             return redirect('dashboard')
         else:
-            messages.error(request, 'Invalid credentials or account is archived.')
+            messages.error(request, 'Informations erronées ou compte archivé.')
     
     return render(request, 'main/login.html')
 
@@ -285,7 +285,7 @@ def add_employee(request):
                     [user.email],
                     fail_silently=False,
                 )
-                messages.success(request, f'Employee {user.get_full_name()} added successfully! A password setup email has been sent to {user.email}.')
+                messages.success(request, f'Employé {user.get_full_name()} ajouté avec succès! Un mail de setup du mot de passe a été envoyé à {user.email}.')
             except Exception as e:
                 # If email fails, delete the user and show error
                 user.delete()
@@ -367,7 +367,7 @@ def reset_password(request, user_id):
             [user.email],
             fail_silently=False,
         )
-        messages.success(request, f'Password reset email sent to {user.get_full_name()} ({user.email}). They will receive instructions to create a new password.')
+        messages.success(request, f'Un mail de reset du mot de passe a été envoyé à {user.get_full_name()} ({user.email}). Il/elle recevra les instructions pour réinitialiser le mot de passe.')
     except Exception as e:
         messages.error(request, f'Failed to send password reset email to {user.email}. Please check the email address and try again.')
     
